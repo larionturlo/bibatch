@@ -26,9 +26,22 @@ func TestBatch_NewWriter(t *testing.T) {
 			want:    []byte("Hello Batch"),
 			wantErr: false,
 		},
+		{
+			name: "few item",
+			fields: fields{
+				b: NewBatch(2),
+				wb: [][]byte{
+					[]byte("Hello"),
+					[]byte(" Batch"),
+				},
+			},
+			want:    []byte("Hello Batch"),
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			var l int
 			for i := range tt.fields.wb {
 
 				wr, err := tt.fields.b.NewWriter()
@@ -37,13 +50,15 @@ func TestBatch_NewWriter(t *testing.T) {
 					return
 				}
 
-				go (func() {
-					wr.Write(tt.fields.wb[i])
+				l += len(tt.fields.wb[i])
+
+				go (func(buff []byte) {
+					wr.Write(buff)
 					defer wr.Close()
-				})()
+				})(tt.fields.wb[i])
 			}
 
-			got := []byte{}
+			got := make([]byte, l)
 			n, err := tt.fields.b.Read(got)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Batch.NewWriter() error = %v, wantErr %v", err, tt.wantErr)

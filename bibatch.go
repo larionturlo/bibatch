@@ -2,7 +2,6 @@ package bibatch
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"sync"
 )
@@ -45,9 +44,8 @@ func (b *Batch) Read(data []byte) (int, error) {
 	var n int
 
 	for idx := range b.items {
-		k, er := b.items[idx].reader.Read(data)
-		fmt.Println(k)
-		if er != nil {
+		k, er := b.items[idx].reader.Read(data[n:])
+		if er != nil && er != io.EOF {
 			return k, er
 		}
 		n += k
